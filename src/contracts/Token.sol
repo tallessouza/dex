@@ -7,7 +7,19 @@ contract Token {
     uint256 public decimals = 18;
     uint256 public totalSupply;
 
-    constructor() public {
+    mapping(address => uint256) public balanceOf;
+
+    constructor() {
         totalSupply = 1000000 * (10**decimals);
+        balanceOf[msg.sender] = totalSupply;
+    }
+
+    function transfer(address _to, uint256 _value)
+        public
+        returns (bool success)
+    {
+        balanceOf[msg.sender] = balanceOf[msg.sender].sub(_value);
+        balanceOf[_to] = balanceOf[_to].add(_value);
+        return true;
     }
 }

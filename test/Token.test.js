@@ -1,6 +1,6 @@
 const Token = artifacts.require('./Token')
 
-contract('Token', accounts => {
+contract('Token', ([deployer, receiver]) => {
   const name = 'Token'
   const symbol = 'Symbol'
   const decimals = '18'
@@ -27,6 +27,17 @@ contract('Token', accounts => {
     it('track totalSupply', async () => {
       result = await token.totalSupply()
       assert.equal(result, totalSupply, 'Incorrect')
+    })
+    it('assigns total supply to deployer', async () => {
+      result = await token.balanceOf(deployer)
+      assert.equal(result, totalSupply, 'Incorrect')
+    })
+  })
+
+  describe('token transfer', () => {
+    it('transfer tokens balances', async () => {
+      let balanceOf
+      balanceOf = await token.balanceOf(deployer)
     })
   })
 })
