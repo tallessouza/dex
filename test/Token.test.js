@@ -121,7 +121,7 @@ contract('Token', ([deployer, receiver, exchange]) => {
     })
   })
 
-  describe('token transfer', () => {
+  describe('delegated transfer', () => {
     beforeEach(async () => {
       amount = tokens(100)
       await token.approve(exchange, amount, { from: deployer })
@@ -163,23 +163,20 @@ contract('Token', ([deployer, receiver, exchange]) => {
     })
 
     describe('failure', () => {
-      // it('rejects insufficient balances', async () => {
-      //   let invalidAmount
-      //   invalidAmount = tokens(100000000) // 100 million - greater than total supply
-      //   await catchRevert(
-      //     token.transfer(receiver, invalidAmount, { from: deployer })
-      //   )
-      //   // Attempt transfer tokens, when you have none
-      //   invalidAmount = tokens(10) // recipient has no tokens
-      //   await catchRevert(
-      //     token.transfer(deployer, invalidAmount, { from: receiver })
-      //   )
-      // })
-      // it('rejects invalid recipients', async () => {
-      //   await catchInvalidAddress(
-      //     token.transfer('0x0', amount, { from: deployer })
-      //   )
-      // })
+      it('rejects insufficient balances', async () => {
+        let invalidAmount
+        invalidAmount = tokens(100000000) // 100 million - greater than total supply
+        await catchRevert(
+          token.transferFrom(deployer, receiver, invalidAmount, {
+            from: exchange
+          })
+        )
+      })
+      it('rejects invalid recipients', async () => {
+        await catchInvalidAddress(
+          token.transferFrom(deployer, '0x0', amount, { from: exchange })
+        )
+      })
     })
   })
 })
