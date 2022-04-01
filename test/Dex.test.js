@@ -1,3 +1,6 @@
+const { ether, EVM_REVERT, ETHER_ADDRESS } = require('./helpers')
+const { catchRevert, catchInvalidAddress } = require('./exceptions')
+
 const Token = artifacts.require('./Token')
 const Dex = artifacts.require('./Dex')
 
@@ -15,6 +18,7 @@ contract('Dex', ([deployer, feeAccount, user1]) => {
 
   beforeEach(async () => {
     token = await Token.new()
+    token.transfer(user1, tokens(100), { from: deployer })
     dex = await Dex.new(feeAccount, feePercent)
   })
 
@@ -30,19 +34,45 @@ contract('Dex', ([deployer, feeAccount, user1]) => {
   })
 
   describe('deposit tokens', () => {
-    beforeEach(async () => {
-      amount = tokens(10)
-      await dex.approve(dex.address, amount, { from: user1 })
-      result = await dex.depositToken(token.address, tokens(10), {
-        from: user1
-      })
-    })
     describe('success', () => {
+      beforeEach(async () => {
+        amount = tokens(10)
+        await token.approve(dex.address, amount, { from: user1 })
+        result = await dex.depositToken(token.address, amount, {
+          from: user1
+        })
+      })
       it('tracks token deposit', async () => {
         balance = await token.balanceOf(dex.address)
-        assert.equal()
+        assert.equal(balance.toString(), amount.toString(), 'Error')
+
+        balance = await dex.tokens(token.address, user1)
+        assert.equal(balance.toString(), amount.toString(), 'Error')
+      })
+
+      it('emits deposit event', async () => {
+        const log = result.logs[0]
+        assert.equal(log.event, 'Deposit', 'Incorrect')
+        const event = log.args
+        assert.equal(event.token, token.address, 'Incorrect')
+        assert.equal(event.user, user1, 'Incorrect')
+        assert.equal(event.amount.toString(), tokens(10), 'Incorrect')
+        assert.equal(event.balance.toString(), tokens(10), 'Incorrect')
       })
     })
-    describe('failure', () => {})
+    describe('failure', () => {
+      it('rejects eth deposit', async () => {
+        await token.approve(dex.address, tokens(10), { from: user1 })
+        await catchInvalidAddress(
+          dex.depositToken(ETHER_ADDRESS, tokens(10), { from: user1 })
+        )
+      })
+
+      it('fails when no tokens approved', async () => {
+        await catchRevert(
+          dex.depositToken(token.address, tokens(10), { from: user1 })
+        )
+      })
+    })
   })
 })
