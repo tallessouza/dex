@@ -33,6 +33,19 @@ contract('Dex', ([deployer, feeAccount, user1]) => {
     })
   })
 
+  describe('deposit ether', () => {
+    beforeEach(async () => {
+      amount = ether(1)
+      result = await dex.depositEther({ from: user1, value: amount })
+      console.log(result)
+    })
+
+    it('tracks eth deposit', async () => {
+      balance = await dex.tokens(ETHER_ADDRESS, user1)
+      assert.equal(balance.toString(), amount.toString())
+    })
+  })
+
   describe('deposit tokens', () => {
     describe('success', () => {
       beforeEach(async () => {
