@@ -37,7 +37,7 @@ contract('Dex', ([deployer, feeAccount, user1]) => {
     beforeEach(async () => {
       amount = ether(1)
       result = await dex.depositEther({ from: user1, value: amount })
-      console.log(result)
+      console.log(result.value)
     })
 
     it('tracks eth deposit', async () => {
