@@ -10,14 +10,30 @@ contract Dex {
     address public feeAccount;
     uint256 public feePercent;
     address constant ETHER = address(0);
+    address payable private owner;
 
     mapping(address => mapping(address => uint256)) public tokens;
 
     event Deposit(address token, address user, uint256 amount, uint256 balance);
 
+    /// Only owner can execute this function!
+    error OnlyOwner();
+
+    modifier onlyOwner() {
+        if (msg.sender != getContractOwner()) {
+            revert OnlyOwner();
+        }
+        _;
+    }
+
     constructor(address _feeAccount, uint256 _feePercent) {
+        setContractOwner(msg.sender);
         feeAccount = _feeAccount;
         feePercent = _feePercent;
+    }
+
+    function getContractOwner() public view returns (address) {
+        return owner;
     }
 
     function depositEther() public payable {
@@ -30,5 +46,9 @@ contract Dex {
         require(Token(_token).transferFrom(msg.sender, address(this), _amount));
         tokens[_token][msg.sender] = tokens[_token][msg.sender].add(_amount);
         emit Deposit(_token, msg.sender, _amount, tokens[_token][msg.sender]);
+    }
+
+    function setContractOwner(address newOwner) private {
+        owner = payable(newOwner);
     }
 }
